@@ -1,4 +1,4 @@
-﻿using CliWrap;
+using CliWrap;
 using CliWrap.Buffered;
 using CommandLine;
 using System;
@@ -18,7 +18,7 @@ namespace ScoreSaber_Deobfuscator
             Options = Parser.Default.ParseArguments<CliOptions>(args).Value;
             if (Options is null) return;
 
-            if (Options.Input == null && Options.DependencyPath == null && Options.Password == null)
+            if (Options.Input == null || Options.DependencyPath == null || Options.Password == null)
             {
                 Console.WriteLine("Missing arguments, please try running with -help");
                 Environment.Exit(0);
