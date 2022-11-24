@@ -13,7 +13,7 @@ namespace ScoreSaber_Deobfuscator
     {
         internal static CliOptions Options = new();
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             Options = Parser.Default.ParseArguments<CliOptions>(args).Value;
             if (Options is null) return;
@@ -29,13 +29,7 @@ namespace ScoreSaber_Deobfuscator
                 Console.WriteLine($"File {Options.Input} doesn't exist");
             }
 
-            MainAsync().Wait();
-        }
-
-        static async Task MainAsync()
-        {
             var tools = SetupTools();
-
             foreach (var tool in tools)
             {
                 await CloneTool(tool);
