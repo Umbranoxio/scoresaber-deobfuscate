@@ -1,20 +1,17 @@
-﻿using System;
-using CommandLine.Text;
-using CommandLine;
-using System.Runtime.InteropServices;
+﻿using CommandLine;
 
 namespace ScoreSaber_Deobfuscator
 {
     internal class CliOptions
     {
         [Option('i', HelpText = "Path of the input file")]
-        public string Input { get; set; }
+        public string Input { get; set; } = null!;
 
         [Option('d', HelpText = "Path of the ScoreSaber Dependency files")]
-        public string DependencyPath { get; set; }
+        public string DependencyPath { get; set; } = null!;
 
         [Option('p', HelpText = "Symbol password")]
-        public string Password { get; set; }
+        public string Password { get; set; } = null!;
 
         [Option('v', HelpText = "Verbose logging")]
         public bool Verbose { get; set; } = false;
