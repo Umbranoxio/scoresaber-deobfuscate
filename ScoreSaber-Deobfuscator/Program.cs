@@ -1,11 +1,11 @@
-﻿using System;
+﻿using CliWrap;
+using CliWrap.Buffered;
+using CommandLine;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using CliWrap;
-using CliWrap.Buffered;
-using CommandLine;
 
 namespace ScoreSaber_Deobfuscator
 {
@@ -146,10 +146,12 @@ namespace ScoreSaber_Deobfuscator
         {
             if (File.Exists(tool.BuildPath)) { return; }
 
+            var msBuildCommand = Options.DotnetMSBuild ? "dotnet msbuild" : "msbuild";
+
             if (tool.RestoreNugetPackages)
             {
                 tool.Log("Restoring Nuget packages...");
-                await Cli.Wrap("msbuild")
+                await Cli.Wrap(msBuildCommand)
                     .WithWorkingDirectory(tool.Path)
                     .WithArguments("-t:restore")
                     .WithValidation(CommandResultValidation.None)
@@ -158,7 +160,7 @@ namespace ScoreSaber_Deobfuscator
             }
 
             tool.Log("Building...");
-            await Cli.Wrap("msbuild")
+            await Cli.Wrap(msBuildCommand)
                 .WithArguments($"{tool.Path}\\{tool.SlnName}.sln /p:Configuration=Release")
                 .WithValidation(CommandResultValidation.None)
                 .ExecuteAsync();
