@@ -86,11 +86,6 @@ namespace ScoreSaber_Deobfuscator
                 }
             };
 
-            foreach (var tool in tools)
-            {
-                Directory.CreateDirectory(tool.Path);
-            }
-
             return tools;
         }
 
