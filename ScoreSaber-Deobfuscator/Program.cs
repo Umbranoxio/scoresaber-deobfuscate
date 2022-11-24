@@ -16,9 +16,11 @@ namespace ScoreSaber_Deobfuscator
         static void Main(string[] args)
         {
             Options = Parser.Default.ParseArguments<CliOptions>(args).Value;
-            if (Options.Input == null || Options.DependencyPath == null || Options.Password == null)
+            if (Options is null) return;
+
+            if (Options.Input == null && Options.DependencyPath == null && Options.Password == null)
             {
-                Console.WriteLine("Missing arguments, please try running with --help");
+                Console.WriteLine("Missing arguments, please try running with -help");
                 Environment.Exit(0);
             }
 
@@ -43,6 +45,7 @@ namespace ScoreSaber_Deobfuscator
             await Deobfuscate(tools);
         }
 
+
         /// <summary>
         /// Sets up all the tools required, creates target directories if needed
         /// </summary>
@@ -56,17 +59,17 @@ namespace ScoreSaber_Deobfuscator
                 slnName: "eazdevirt",
                 repoUrl: "https://github.com/Umbranoxio/eazdevirt",
                 restoreNugetPackages: false,
-                resolveSubmodules: false
+                resolveSubmodules: true
             ));
 
             tools.Add(new ToolInformation(
                 path: Path.Combine(Environment.CurrentDirectory, "de4dot"),
                 buildPath: Path.Combine(Environment.CurrentDirectory, "de4dot", "Release", "de4dot.exe"),
                 slnName: "de4dot",
-                repoUrl: "https://github.com/lolPants/de4dot",
+                repoUrl: "https://github.com/de4dot/de4dot",
                 restoreNugetPackages: false,
                 resolveSubmodules: true,
-                targetBranch: "old"
+                targetCommit: "f279bed1ed5b65d3243ed21cb4e4ad7048e6abb1"
             ));
 
             tools.Add(new ToolInformation(
@@ -119,16 +122,6 @@ namespace ScoreSaber_Deobfuscator
                 tool.Log($"Repo reset to {tool.TargetCommit}");
             }
 
-            if (tool.TargetBranch != String.Empty)
-            {
-                await Cli.Wrap("git")
-                    .WithArguments($"checkout {tool.TargetBranch}")
-                    .WithWorkingDirectory(tool.Path)
-                    .WithValidation(CommandResultValidation.None)
-                    .ExecuteAsync();
-                tool.Log($"Repos branch set to {tool.TargetBranch}");
-            }
-
             if (tool.ResolveSubmodules)
             {
                 tool.Log("Resolving submodules...");
@@ -155,10 +148,12 @@ namespace ScoreSaber_Deobfuscator
         {
             if (File.Exists(tool.BuildPath)) { return; }
 
+            var msBuildCommand = Options.DotnetMSBuild ? "dotnet msbuild" : "msbuild";
+
             if (tool.RestoreNugetPackages)
             {
                 tool.Log("Restoring Nuget packages...");
-                await Cli.Wrap("msbuild")
+                await Cli.Wrap(msBuildCommand)
                     .WithWorkingDirectory(tool.Path)
                     .WithArguments("-t:restore")
                     .WithValidation(CommandResultValidation.None)
@@ -167,7 +162,7 @@ namespace ScoreSaber_Deobfuscator
             }
 
             tool.Log("Building...");
-            await Cli.Wrap("msbuild")
+            await Cli.Wrap(msBuildCommand)
                 .WithArguments($"{tool.Path}\\{tool.SlnName}.sln /p:Configuration=Release")
                 .WithValidation(CommandResultValidation.None)
                 .ExecuteAsync();
@@ -330,12 +325,11 @@ namespace ScoreSaber_Deobfuscator
         internal string SlnName;
         internal string RepoUrl;
         internal string TargetCommit;
-        internal string TargetBranch;
         internal bool RestoreNugetPackages;
         internal bool ResolveSubmodules;
         internal bool IsEmpty;
 
-        internal ToolInformation(string path, string buildPath, string slnName, string repoUrl, bool restoreNugetPackages, bool resolveSubmodules, string targetCommit = "", string targetBranch = "")
+        internal ToolInformation(string path, string buildPath, string slnName, string repoUrl, bool restoreNugetPackages, bool resolveSubmodules, string targetCommit = "")
         {
             Path = path;
             BuildPath = buildPath;
@@ -345,12 +339,6 @@ namespace ScoreSaber_Deobfuscator
             RestoreNugetPackages = restoreNugetPackages;
             ResolveSubmodules = resolveSubmodules;
             TargetCommit = targetCommit;
-            TargetBranch = targetBranch;
-
-            if (targetCommit != String.Empty && targetBranch != String.Empty)
-            {
-                throw new Exception("Can't have both a target branch *and* target commit");
-            }
 
             if (Directory.Exists(path))
             {
