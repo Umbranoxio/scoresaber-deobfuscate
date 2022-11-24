@@ -10,6 +10,7 @@ In order to run the deobfuscator correctly you'll need all of ScoreSabers depend
 ScoreSaber-Deobfuscator.exe -i <input file> -d <working dir> -p <symbol encryption key>
 ```
 If there are problems with the deobfuscation process, run the tool with the optional verbosity flag `-v` and send the results to `Umbranox#0001` on Discord, I'll resolve it.
+If you'd like to use `dotnet msbuild` instead of `msbuild` add the optional flag -l
 
 Example first run output:
 ```
