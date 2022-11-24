@@ -147,22 +147,20 @@ namespace ScoreSaber_Deobfuscator
         {
             if (File.Exists(tool.BuildPath)) return;
 
-            var msBuildCommand = Options.DotnetMSBuild ? "dotnet msbuild" : "msbuild";
-
             if (tool.RestoreNugetPackages)
             {
                 tool.Log("Restoring Nuget packages...");
-                await Cli.Wrap(msBuildCommand)
+                await Cli.Wrap("dotnet")
                     .WithWorkingDirectory(tool.Path)
-                    .WithArguments("-t:restore")
+                    .WithArguments("msbuild -t:restore")
                     .WithValidation(CommandResultValidation.None)
                     .ExecuteBufferedAsync();
                 tool.Log("Nuget packages resolved");
             }
 
             tool.Log("Building...");
-            await Cli.Wrap(msBuildCommand)
-                .WithArguments($"{tool.Path}\\{tool.SlnName}.sln /p:Configuration=Release")
+            await Cli.Wrap("dotnet")
+                .WithArguments($"msbuild {tool.Path}\\{tool.SlnName}.sln /p:Configuration=Release")
                 .WithValidation(CommandResultValidation.None)
                 .ExecuteAsync();
 
