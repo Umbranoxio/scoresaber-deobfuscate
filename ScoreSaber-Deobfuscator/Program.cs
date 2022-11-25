@@ -16,7 +16,7 @@ namespace ScoreSaber_Deobfuscator
         static void Main(string[] args)
         {
             Options = Parser.Default.ParseArguments<CliOptions>(args).Value;
-            if (Options.Input == null && Options.DependencyPath == null && Options.Password == null)
+            if (Options.Input == null || Options.DependencyPath == null || Options.Password == null)
             {
                 Console.WriteLine("Missing arguments, please try running with -help");
                 Environment.Exit(0);
