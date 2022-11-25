@@ -1,52 +1,28 @@
+# ScoreSaber Deobfuscator
 
-# ScoreSaber-Deobfuscate
-This tool automatically clones, builds and runs any ScoreSaber build through the required toolchain with the correct settings.
+_This tool will clone and build any required tools, and then attempt to deobfuscate a ScoreSaber DLL file._
 
-This tool assumes you have `git` and `msbuild` added to your `PATH` with little to no error handling and only runs on Windows
+## Prerequisites (Toolchain)
 
-# Example Usage:
-In order to run the deobfuscator correctly you'll need all of ScoreSabers dependencies in a "working directory", this means you must have the correct game dependencies that correlate with the ScoreSaber build you're attempting to deobfuscate 
+- [.NET SDK (version 6 or later)](https://dotnet.microsoft.com/en-us/download)
+- [.NET Framework v4.7.2 Developer Pack](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net472)
+- `git` in your PATH
+- `msbuild` in your PATH
+
+## Prerequisites (Deobfuscation)
+
+- Obfuscated ScoreSaber `.dll`
+- All dependencies for the ScoreSaber version
+  - Game Assemblies
+  - Mod Assemblies
+  - Library Assemblies
+
+## Example Usage:
+
+> Warning: Currently the CLI can only read from a single dependency directory. You will need to merge all dependencies into a single directory for now.
+
 ```
-ScoreSaber-Deobfuscator.exe -i <input file> -d <working dir> -p <symbol encryption key>
+Deobfuscator.Cli.exe -i <input file> -d <dependency dir> -p <symbol encryption key>
 ```
+
 If there are problems with the deobfuscation process, run the tool with the optional verbosity flag `-v` and send the results to `Umbranox#0001` on Discord, I'll resolve it.
-
-Example first run output:
-```
-[eazdevirt] Cloning...
-[eazdevirt] Resolving submodules...
-[eazdevirt] Submodules resolved.
-[eazdevirt] Cloned.
-[eazdevirt] Building...
-[eazdevirt] Built.
-[de4dot] Cloning...
-[de4dot] Repo reset to f279bed1ed5b65d3243ed21cb4e4ad7048e6abb1
-[de4dot] Resolving submodules...
-[de4dot] Submodules resolved.
-[de4dot] Cloned.
-[de4dot] Building...
-[de4dot] Built.
-[osu!decoder] Cloning...
-[osu!decoder] Resolving submodules...
-[osu!decoder] Submodules resolved.
-[osu!decoder] Cloned.
-[osu!decoder] Restoring Nuget packages...
-[osu!decoder] Nuget packages resolved
-[osu!decoder] Building...
-[osu!decoder] Built.
-[EazFixer] Cloning...
-[EazFixer] Cloned.
-[EazFixer] Restoring Nuget packages...
-[EazFixer] Nuget packages resolved
-[EazFixer] Building...
-[EazFixer] Built.
-[de4dot] Running...
-[de4dot] Done.
-[eazdevirt] Running...
-[eazdevirt] Devirtualized 42/42 methods
-[eazdevirt] Done.
-[EazFixer] Running...
-[EazFixer] Done.
-[osu!decoder] Running...
-[osu!decoder] Done.
-```
