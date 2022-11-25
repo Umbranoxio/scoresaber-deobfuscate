@@ -56,7 +56,7 @@ namespace ScoreSaber_Deobfuscator
                 slnName: "eazdevirt",
                 repoUrl: "https://github.com/Umbranoxio/eazdevirt",
                 restoreNugetPackages: false,
-                resolveSubmodules: true
+                resolveSubmodules: false
             ));
 
             tools.Add(new ToolInformation(
