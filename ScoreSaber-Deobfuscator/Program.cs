@@ -43,7 +43,6 @@ namespace ScoreSaber_Deobfuscator
             await Deobfuscate(tools);
         }
 
-
         /// <summary>
         /// Sets up all the tools required, creates target directories if needed
         /// </summary>
@@ -64,10 +63,10 @@ namespace ScoreSaber_Deobfuscator
                 path: Path.Combine(Environment.CurrentDirectory, "de4dot"),
                 buildPath: Path.Combine(Environment.CurrentDirectory, "de4dot", "Release", "de4dot.exe"),
                 slnName: "de4dot",
-                repoUrl: "https://github.com/de4dot/de4dot",
+                repoUrl: "https://github.com/lolPants/de4dot",
                 restoreNugetPackages: false,
                 resolveSubmodules: true,
-                targetCommit: "f279bed1ed5b65d3243ed21cb4e4ad7048e6abb1"
+                targetBranch: "old"
             ));
 
             tools.Add(new ToolInformation(
@@ -118,6 +117,16 @@ namespace ScoreSaber_Deobfuscator
                     .WithValidation(CommandResultValidation.None)
                     .ExecuteAsync();
                 tool.Log($"Repo reset to {tool.TargetCommit}");
+            }
+
+            if (tool.TargetBranch != String.Empty)
+            {
+                await Cli.Wrap("git")
+                    .WithArguments($"checkout {tool.TargetBranch}")
+                    .WithWorkingDirectory(tool.Path)
+                    .WithValidation(CommandResultValidation.None)
+                    .ExecuteAsync();
+                tool.Log($"Repos branch set to {tool.TargetBranch}");
             }
 
             if (tool.ResolveSubmodules)
@@ -323,11 +332,12 @@ namespace ScoreSaber_Deobfuscator
         internal string SlnName;
         internal string RepoUrl;
         internal string TargetCommit;
+        internal string TargetBranch;
         internal bool RestoreNugetPackages;
         internal bool ResolveSubmodules;
         internal bool IsEmpty;
 
-        internal ToolInformation(string path, string buildPath, string slnName, string repoUrl, bool restoreNugetPackages, bool resolveSubmodules, string targetCommit = "")
+        internal ToolInformation(string path, string buildPath, string slnName, string repoUrl, bool restoreNugetPackages, bool resolveSubmodules, string targetCommit = "", string targetBranch = "")
         {
             Path = path;
             BuildPath = buildPath;
@@ -337,6 +347,12 @@ namespace ScoreSaber_Deobfuscator
             RestoreNugetPackages = restoreNugetPackages;
             ResolveSubmodules = resolveSubmodules;
             TargetCommit = targetCommit;
+            TargetBranch = targetBranch;
+
+            if (targetCommit != String.Empty && targetBranch != String.Empty)
+            {
+                throw new Exception("Can't have both a target branch *and* target commit");
+            }
 
             if (Directory.Exists(path))
             {
