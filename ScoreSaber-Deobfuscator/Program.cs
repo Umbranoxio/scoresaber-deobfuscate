@@ -1,4 +1,4 @@
-﻿using CliWrap;
+using CliWrap;
 using CliWrap.Buffered;
 using CommandLine;
 using System;
@@ -59,9 +59,9 @@ namespace ScoreSaber_Deobfuscator
                     path: Path.Combine(Environment.CurrentDirectory, "de4dot"),
                     buildPath: Path.Combine(Environment.CurrentDirectory, "de4dot", "Release", "de4dot.exe"),
                     slnName: "de4dot",
-                    repoUrl: "https://github.com/de4dot/de4dot",
+                    repoUrl: "https://github.com/lolPants/de4dot",
                     resolveSubmodules: true,
-                    targetCommit: "f279bed1ed5b65d3243ed21cb4e4ad7048e6abb1"
+                    targetCommit: "33c48f74ffab5e183cfb030346dbfe9dafaf90e5"
                 ),
 
                 new ToolInformation(
