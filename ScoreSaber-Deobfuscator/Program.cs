@@ -47,43 +47,39 @@ namespace ScoreSaber_Deobfuscator
         {
             var tools = new List<ToolInformation>
             {
-                new ToolInformation()
-                {
-                    Path = Path.Combine(Environment.CurrentDirectory, "eazdevirt"),
-                    BuildPath = Path.Combine(Environment.CurrentDirectory, "eazdevirt", "bin", "Release", "eazdevirt.exe"),
-                    SlnName = "eazdevirt",
-                    RepoUrl = "https://github.com/Umbranoxio/eazdevirt",
-                    RestoreNugetPackages = false,
-                    ResolveSubmodules = true,
-                },
+                new ToolInformation(
+                    path: Path.Combine(Environment.CurrentDirectory, "eazdevirt"),
+                    buildPath: Path.Combine(Environment.CurrentDirectory, "eazdevirt", "bin", "Release", "eazdevirt.exe"),
+                    slnName: "eazdevirt",
+                    repoUrl: "https://github.com/Umbranoxio/eazdevirt",
+                    resolveSubmodules: true
+                ),
 
-                new ToolInformation() {
-                    Path = Path.Combine(Environment.CurrentDirectory, "de4dot"),
-                    BuildPath = Path.Combine(Environment.CurrentDirectory, "de4dot", "Release", "de4dot.exe"),
-                    SlnName = "de4dot",
-                    RepoUrl = "https://github.com/de4dot/de4dot",
-                    RestoreNugetPackages = false,
-                    ResolveSubmodules = true,
-                    TargetCommit = "f279bed1ed5b65d3243ed21cb4e4ad7048e6abb1"
-                },
+                new ToolInformation(
+                    path: Path.Combine(Environment.CurrentDirectory, "de4dot"),
+                    buildPath: Path.Combine(Environment.CurrentDirectory, "de4dot", "Release", "de4dot.exe"),
+                    slnName: "de4dot",
+                    repoUrl: "https://github.com/de4dot/de4dot",
+                    resolveSubmodules: true,
+                    targetCommit: "f279bed1ed5b65d3243ed21cb4e4ad7048e6abb1"
+                ),
 
-                new ToolInformation() {
-                    Path = Path.Combine(Environment.CurrentDirectory, "osu-decoder"),
-                    BuildPath = Path.Combine(Environment.CurrentDirectory, "osu-decoder", "osu!decoder", "bin", "Release", "osu!decoder.exe"),
-                    SlnName = "osu!decoder",
-                    RepoUrl = "https://github.com/Umbranoxio/osu-decoder",
-                    RestoreNugetPackages = true,
-                    ResolveSubmodules = true
-                },
+                new ToolInformation(
+                    path: Path.Combine(Environment.CurrentDirectory, "osu-decoder"),
+                    buildPath: Path.Combine(Environment.CurrentDirectory, "osu-decoder", "osu!decoder", "bin", "Release", "osu!decoder.exe"),
+                    slnName: "osu!decoder",
+                    repoUrl: "https://github.com/Umbranoxio/osu-decoder",
+                    restoreNugetPackages: true,
+                    resolveSubmodules: true
+                ),
 
-                new ToolInformation() {
-                    Path = Path.Combine(Environment.CurrentDirectory, "EazFixer"),
-                    BuildPath = Path.Combine(Environment.CurrentDirectory, "EazFixer", "EazFixer", "bin", "Release", "net472", "EazFixer.exe"),
-                    SlnName= "EazFixer",
-                    RepoUrl= "https://github.com/holly-hacker/EazFixer",
-                    RestoreNugetPackages= true,
-                    ResolveSubmodules= false,
-                }
+                new ToolInformation(
+                    path: Path.Combine(Environment.CurrentDirectory, "EazFixer"),
+                    buildPath: Path.Combine(Environment.CurrentDirectory, "EazFixer", "EazFixer", "bin", "Release", "net472", "EazFixer.exe"),
+                    slnName: "EazFixer",
+                    repoUrl: "https://github.com/holly-hacker/EazFixer",
+                    restoreNugetPackages: true
+                ),
             };
 
             return tools;
@@ -317,16 +313,16 @@ namespace ScoreSaber_Deobfuscator
 
     internal class ToolInformation
     {
-        internal string Path { get; init; } = null!;
-        internal string BuildPath { get; init; } = null!;
+        internal string Path { get; private set; }
+        internal string BuildPath { get; private set; }
         internal string? BuildPathDirectory => System.IO.Path.GetDirectoryName(BuildPath);
 
 
-        internal string SlnName { get; init; } = null!;
-        internal string RepoUrl { get; init; } = null!;
-        internal string TargetCommit { get; init; } = null!;
-        internal bool RestoreNugetPackages { get; init; }
-        internal bool ResolveSubmodules { get; init; }
+        internal string SlnName { get; private set; }
+        internal string RepoUrl { get; private set; }
+        internal string? TargetCommit { get; private set; }
+        internal bool RestoreNugetPackages { get; private set; }
+        internal bool ResolveSubmodules { get; private set; }
         internal bool IsEmpty
         {
             get
@@ -341,6 +337,17 @@ namespace ScoreSaber_Deobfuscator
 
                 return true;
             }
+        }
+
+        internal ToolInformation(string path, string buildPath, string slnName, string repoUrl, string? targetCommit = null, bool restoreNugetPackages = false, bool resolveSubmodules = false)
+        {
+            Path = path;
+            BuildPath = buildPath;
+            SlnName = slnName;
+            RepoUrl = repoUrl;
+            TargetCommit = targetCommit;
+            RestoreNugetPackages = restoreNugetPackages;
+            ResolveSubmodules = resolveSubmodules;
         }
 
         internal void Log(string log)
