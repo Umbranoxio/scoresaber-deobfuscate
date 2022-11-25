@@ -17,8 +17,5 @@ namespace ScoreSaber_Deobfuscator
 
         [Option('v', HelpText = "Verbose logging")]
         public bool Verbose { get; set; } = false;
-
-        [Option('l', "luluislazy", HelpText = "Uses dotnet msbuild instead of msbuild because lulu is lazy")]
-        public bool DotnetMSBuild { get; set; } = false;
     }
 }
