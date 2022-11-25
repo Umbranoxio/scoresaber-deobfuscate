@@ -1,38 +1,40 @@
 ﻿using CommandLine;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Deobfuscator.Cli
 {
     internal class Program
     {
-        internal class CliOptions
+        internal class Options
         {
-            [Option('i', HelpText = "Path of the input file")]
+            [Option('i', "input", Required = true, HelpText = "Path of the input file")]
             public string Input { get; set; } = null!;
 
-            [Option('d', HelpText = "Path of the ScoreSaber Dependency files")]
-            public string DependencyPath { get; set; } = null!;
+            [Option('d', "dependency-directory", HelpText = "Path of the ScoreSaber Dependency files")]
+            public IEnumerable<string> DependencyDirectories { get; set; } = null!;
 
-            [Option('p', HelpText = "Symbol password")]
+            [Option('p', "password", Required = true, HelpText = "Symbol password")]
             public string Password { get; set; } = null!;
 
-            [Option('v', HelpText = "Verbose logging")]
+            [Option('v', "verbose", Required = false, HelpText = "Verbose logging")]
             public bool Verbose { get; set; } = false;
         }
 
         static async Task Main(string[] args)
         {
-            var options = Parser.Default.ParseArguments<CliOptions>(args).Value;
+            var options = Parser.Default.ParseArguments<Options>(args).Value;
             if (options is null) return;
 
-            if (options.Input == null || options.DependencyPath == null || options.Password == null)
+            if (options.Input == null || options.Password == null)
             {
                 Console.WriteLine("Missing arguments, please try running with --help");
                 Environment.Exit(1);
             }
 
-            var deobfuscator = new Deobfuscator(options.Input, options.Password, options.Verbose, new() { options.DependencyPath });
+            var deobfuscator = new Deobfuscator(options.Input, options.Password, options.Verbose, options.DependencyDirectories.ToList());
             await deobfuscator.Deobfuscate();
         }
     }

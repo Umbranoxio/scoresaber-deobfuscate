@@ -20,7 +20,8 @@ _This tool will clone and build any required tools, and then attempt to deobfusc
 ## Example Usage:
 
 > **Note**  
-> Currently the CLI can only read from a single dependency directory. You will need to merge all dependencies into a single directory for now.
+> You can specify the `-d` flag multiple times to read from multiple dependency directories.  
+> The contents of each directory will be copied into a temporary working directory alongside the input DLL.
 
 ```
 Deobfuscator.Cli.exe -i <input file> -d <dependency dir> -p <symbol encryption key>
