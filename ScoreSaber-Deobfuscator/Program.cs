@@ -1,4 +1,4 @@
-using CliWrap;
+﻿using CliWrap;
 using CliWrap.Buffered;
 using CommandLine;
 using System;
@@ -97,7 +97,7 @@ namespace ScoreSaber_Deobfuscator
             await Cli.Wrap("git")
                 .WithArguments($"clone \"{tool.RepoUrl}\" \"{tool.Path}\"")
                 .WithValidation(CommandResultValidation.None)
-                .ExecuteAsync();
+                .ExecuteFallible();
 
             if (tool.TargetCommit != string.Empty)
             {
@@ -105,7 +105,7 @@ namespace ScoreSaber_Deobfuscator
                     .WithArguments($"reset --hard {tool.TargetCommit}")
                     .WithWorkingDirectory(tool.Path)
                     .WithValidation(CommandResultValidation.None)
-                    .ExecuteAsync();
+                    .ExecuteFallible();
 
                 tool.Log($"Repo reset to {tool.TargetCommit}");
             }
@@ -117,13 +117,13 @@ namespace ScoreSaber_Deobfuscator
                     .WithArguments("submodule init")
                     .WithWorkingDirectory(tool.Path)
                     .WithValidation(CommandResultValidation.None)
-                    .ExecuteAsync();
+                    .ExecuteFallible();
 
                 await Cli.Wrap("git")
                     .WithArguments("submodule update")
                     .WithWorkingDirectory(tool.Path)
                     .WithValidation(CommandResultValidation.None)
-                    .ExecuteAsync();
+                    .ExecuteFallible();
 
                 tool.Log("Submodules resolved.");
             }
@@ -153,7 +153,7 @@ namespace ScoreSaber_Deobfuscator
             await Cli.Wrap("dotnet")
                 .WithArguments($"msbuild \"{tool.Path}\\{tool.SlnName}.sln\" /p:Configuration=Release")
                 .WithValidation(CommandResultValidation.None)
-                .ExecuteAsync();
+                .ExecuteFallible();
 
             tool.Log($"Built.");
         }
