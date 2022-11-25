@@ -11,10 +11,29 @@ namespace ScoreSaber_Deobfuscator
             public string StdOutput { get; private set; }
             public string StdError { get; private set; }
 
-            public Exception(StringBuilder stdOutput, StringBuilder stdError) : base($"stdout:\n{stdOutput}\n\nstderr:\n{stdError}")
+            public Exception(StringBuilder stdOutput, StringBuilder stdError) : base(Output(stdOutput, stdError))
             {
                 StdOutput = stdOutput.ToString();
                 StdError = stdError.ToString();
+            }
+
+            private static string Output(StringBuilder stdOutput, StringBuilder stdError)
+            {
+                var builder = new StringBuilder();
+
+                var output = stdOutput.ToString();
+                if (output != string.Empty)
+                {
+                    builder.Append($"\nstdout:\n{output}\n");
+                }
+
+                var error = stdError.ToString();
+                if (error != string.Empty)
+                {
+                    builder.Append($"\nstderr:\n{error}\n");
+                }
+
+                return builder.ToString();
             }
         }
 
