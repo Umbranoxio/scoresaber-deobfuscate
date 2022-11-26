@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Deobfuscator
 {
-    internal static class Toolchain
+    public static class Toolchain
     {
         public static readonly Tool EazDevirt = new EazDevirt();
         public static readonly Tool de4dot = new de4dot();
