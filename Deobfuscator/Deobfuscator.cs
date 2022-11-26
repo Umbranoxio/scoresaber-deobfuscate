@@ -50,7 +50,7 @@ namespace Deobfuscator
             public DependencyDirNotExistsException(string path) : base(path) { }
         }
 
-        public async Task Deobfuscate(Toolchain toolchain)
+        public async Task Deobfuscate(Toolchain toolchain, bool dryRun = false)
         {
             if (!File.Exists(InputPath))
             {
@@ -94,7 +94,7 @@ namespace Deobfuscator
                 string outputPath = Path.Combine(wd, output);
                 string finalPath = Path.Combine(InputDir, finalFilename);
 
-                File.Copy(outputPath, finalPath, true);
+                if (!dryRun) File.Copy(outputPath, finalPath, true);
             }
             catch (Tool.OutputNotExistsException)
             {
