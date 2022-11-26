@@ -24,8 +24,6 @@ namespace Deobfuscator.Tools
         protected override async Task<string> ExecuteInternal(Deobfuscator deobfuscator, string path, string fileName)
         {
             var log = deobfuscator.Logger;
-            log.LogInformation("Running...");
-
             var results = await Cli.Wrap(BuildPath)
                  .WithArguments($"-d \"{path}\"")
                  .WithValidation(CommandResultValidation.None)
@@ -50,7 +48,6 @@ namespace Deobfuscator.Tools
                 log.LogInformation("{stdout}", results.StandardOutput);
             }
 
-            log.LogInformation("Done.");
             return $"{fileName}-devirtualized.dll";
         }
 

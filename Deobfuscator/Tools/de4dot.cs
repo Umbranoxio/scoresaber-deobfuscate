@@ -22,8 +22,6 @@ namespace Deobfuscator.Tools
         protected override async Task<string> ExecuteInternal(Deobfuscator deobfuscator, string path, string fileName)
         {
             var log = deobfuscator.Logger;
-            log.LogInformation("Running...");
-
             var results = await Cli.Wrap(BuildPath)
                 .WithArguments($"--dont-rename --keep-types --preserve-tokens \"{path}\"")
                 .WithValidation(CommandResultValidation.None)
@@ -34,7 +32,7 @@ namespace Deobfuscator.Tools
                 log.LogDebug("{stdout}", results.StandardOutput);
             }
 
-            log.LogInformation("Done.");
+            log.LogInformation("Cleaned assembly.");
             return $"{fileName}-cleaned.dll";
         }
     }
