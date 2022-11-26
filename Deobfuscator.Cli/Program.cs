@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,14 +29,28 @@ namespace Deobfuscator.Cli
             var options = Parser.Default.ParseArguments<Options>(args).Value;
             if (options is null) return;
 
+            using var loggerFactory = LoggerFactory.Create(builder =>
+                builder.AddFilter(null, options.Verbose ? LogLevel.Trace : LogLevel.Information)
+                .AddSimpleConsole(options =>
+                {
+                    options.IncludeScopes = true;
+                    options.TimestampFormat = "HH:mm:ss ";
+                })
+            );
+
+            var log = loggerFactory.CreateLogger("Program");
+
             if (options.Input == null || options.Password == null)
             {
-                Console.WriteLine("Missing arguments, please try running with --help");
+                log.LogCritical("Missing arguments, please try running with --help");
                 Environment.Exit(1);
             }
 
-            var deobfuscator = new Deobfuscator(options.Input, options.Password, options.Verbose, options.DependencyDirectories.ToList());
-            await deobfuscator.Deobfuscate();
+            var toolchain = new Toolchain(loggerFactory);
+            await toolchain.Setup();
+
+            var deobfuscator = new Deobfuscator(loggerFactory, options.Input, options.Password, options.DependencyDirectories.ToList());
+            await deobfuscator.Deobfuscate(toolchain);
         }
     }
 }

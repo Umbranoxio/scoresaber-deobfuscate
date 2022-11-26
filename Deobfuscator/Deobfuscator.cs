@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -11,19 +12,19 @@ namespace Deobfuscator
         private string InputDir { get; }
         private List<string> DependencyDirectories { get; }
         internal string Password { get; }
-        internal bool Verbose { get; }
 
         /// <summary>
         /// Working directory to perform deobfuscation
         /// </summary>
         internal string WorkingDirectory { get; }
 
-        public Deobfuscator(string inputPath, string password, bool verbose, List<string>? dependencyDirectories = null)
+        internal ILogger Logger { get; }
+
+        public Deobfuscator(ILoggerFactory loggerFactory, string inputPath, string password, List<string>? dependencyDirectories = null)
         {
             InputPath = inputPath;
             DependencyDirectories = dependencyDirectories ?? new List<string>();
             Password = password;
-            Verbose = verbose;
 
             var inputDir = Path.GetDirectoryName(inputPath);
             if (inputDir is null)
@@ -35,6 +36,8 @@ namespace Deobfuscator
 
             string fileName = Path.GetFileNameWithoutExtension(inputPath);
             WorkingDirectory = Path.Combine(inputDir, $"{fileName}-deobfuscation");
+
+            Logger = loggerFactory.CreateLogger(fileName);
         }
 
         public class InputNotExistsException : Exception
@@ -47,7 +50,7 @@ namespace Deobfuscator
             public DependencyDirNotExistsException(string path) : base(path) { }
         }
 
-        public async Task Deobfuscate()
+        public async Task Deobfuscate(Toolchain toolchain)
         {
             if (!File.Exists(InputPath))
             {
@@ -62,7 +65,7 @@ namespace Deobfuscator
                 }
             }
 
-            await Toolchain.Setup();
+            await toolchain.Setup();
 
             var wd = WorkingDirectory;
             if (Directory.Exists(wd)) Directory.Delete(wd, true);
@@ -80,10 +83,10 @@ namespace Deobfuscator
 
             try
             {
-                string cleaned = await Toolchain.de4dot.Execute(this, input);
-                string devirt = await Toolchain.EazDevirt.Execute(this, cleaned);
-                string eazfixed = await Toolchain.EazFixer.Execute(this, devirt);
-                string output = await Toolchain.OsuDecoder.Execute(this, eazfixed);
+                string cleaned = await toolchain.de4dot.Execute(this, input);
+                string devirt = await toolchain.EazDevirt.Execute(this, cleaned);
+                string eazfixed = await toolchain.EazFixer.Execute(this, devirt);
+                string output = await toolchain.OsuDecoder.Execute(this, eazfixed);
 
                 string nameWithoutExtension = Path.GetFileNameWithoutExtension(InputPath);
                 string finalFilename = $"{nameWithoutExtension}-deobfuscated.dll";

@@ -1,14 +1,17 @@
 ﻿using CliWrap;
 using CliWrap.Buffered;
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Deobfuscator.Tools
 {
     internal class EazDevirt : Tool
     {
-        internal EazDevirt() : base(
+        internal EazDevirt(ILogger logger) : base(
+            logger: logger,
             path: Path.Combine(Environment.CurrentDirectory, "eazdevirt"),
             buildPath: Path.Combine(Environment.CurrentDirectory, "eazdevirt", "bin", "Release", "eazdevirt.exe"),
             slnName: "eazdevirt",
@@ -19,31 +22,54 @@ namespace Deobfuscator.Tools
 
         protected override async Task<string> ExecuteInternal(Deobfuscator deobfuscator, string path, string fileName)
         {
-            Log("Running...");
+            var log = deobfuscator.Logger;
+            log.LogInformation("Running...");
 
             var results = await Cli.Wrap(BuildPath)
                  .WithArguments($"-d \"{path}\"")
                  .WithValidation(CommandResultValidation.None)
                  .ExecuteBufferedAsync();
 
-            if (deobfuscator.Verbose)
+            var output = ParseOutput(results.StandardOutput);
+            if (output is not null)
             {
-                Log(results.StandardOutput);
+                var (ok, total) = ((int, int))output;
+                if (ok != total)
+                {
+                    log.LogError("Devirtualized {ok} / {total} methods", ok, total);
+                    log.LogError("{stdout}", results.StandardOutput);
+                }
+                else
+                {
+                    log.LogInformation("Devirtualized {ok} / {total} methods", ok, total);
+                }
             }
             else
             {
-                var lines = results.StandardOutput.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
-                foreach (var line in lines)
+                log.LogInformation("{stdout}", results.StandardOutput);
+            }
+
+            log.LogInformation("Done.");
+            return $"{fileName}-devirtualized.dll";
+        }
+
+        private static readonly Regex DevirtRX = new(@"Devirtualized (?<ok>\d+)/(?<total>\d+) methods", RegexOptions.Compiled);
+        private static (int, int)? ParseOutput(string stdout)
+        {
+            var lines = stdout.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+            foreach (var line in lines)
+            {
+                var match = DevirtRX.Match(line);
+                if (match.Success)
                 {
-                    if (line.Contains("methods"))
-                    {
-                        Log(line);
-                    }
+                    string ok = match.Groups["ok"].Value;
+                    string total = match.Groups["total"].Value;
+
+                    return (int.Parse(ok), int.Parse(total));
                 }
             }
 
-            Log("Done.");
-            return $"{fileName}-devirtualized.dll";
+            return null;
         }
     }
 }

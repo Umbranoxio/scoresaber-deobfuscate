@@ -1,4 +1,5 @@
 ﻿using CliWrap;
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -8,6 +9,8 @@ namespace Deobfuscator
     public abstract class Tool
     {
         #region Properties
+        internal ILogger Logger { get; }
+
         internal string ToolPath { get; private set; }
         internal string BuildPath { get; private set; }
         internal string? BuildPathDirectory => Path.GetDirectoryName(BuildPath);
@@ -35,8 +38,9 @@ namespace Deobfuscator
         }
         #endregion
 
-        internal Tool(string path, string buildPath, string slnName, string repoUrl, string? targetCommit = null, bool restoreNugetPackages = false, bool resolveSubmodules = false)
+        internal Tool(ILogger logger, string path, string buildPath, string slnName, string repoUrl, string? targetCommit = null, bool restoreNugetPackages = false, bool resolveSubmodules = false)
         {
+            Logger = logger;
             ToolPath = path;
             BuildPath = buildPath;
             SlnName = slnName;
@@ -47,11 +51,6 @@ namespace Deobfuscator
         }
 
         #region Utilities
-        internal void Log(string log)
-        {
-            Console.WriteLine($"[{SlnName}] {log}");
-        }
-
         public override string ToString()
         {
             return ToolPath;
@@ -66,7 +65,7 @@ namespace Deobfuscator
         {
             if (!IsEmpty) return;
 
-            Log("Cloning...");
+            Logger.LogInformation("Cloning...");
             await Cli.Wrap("git")
                 .WithArguments($"clone \"{RepoUrl}\" \"{ToolPath}\"")
                 .WithValidation(CommandResultValidation.None)
@@ -80,12 +79,12 @@ namespace Deobfuscator
                     .WithValidation(CommandResultValidation.None)
                     .ExecuteFallible();
 
-                Log($"Repo reset to {TargetCommit}");
+                Logger.LogInformation($"Repo reset to {TargetCommit}");
             }
 
             if (ResolveSubmodules)
             {
-                Log("Resolving submodules...");
+                Logger.LogInformation("Resolving submodules...");
                 await Cli.Wrap("git")
                     .WithArguments("submodule init")
                     .WithWorkingDirectory(ToolPath)
@@ -98,10 +97,10 @@ namespace Deobfuscator
                     .WithValidation(CommandResultValidation.None)
                     .ExecuteFallible();
 
-                Log("Submodules resolved.");
+                Logger.LogInformation("Submodules resolved.");
             }
 
-            Log("Cloned.");
+            Logger.LogInformation("Cloned.");
         }
 
         /// <summary>
@@ -113,23 +112,23 @@ namespace Deobfuscator
 
             if (RestoreNugetPackages)
             {
-                Log("Restoring Nuget packages...");
+                Logger.LogInformation("Restoring Nuget packages...");
                 await Cli.Wrap("msbuild")
                     .WithWorkingDirectory(ToolPath)
                     .WithArguments("-t:restore")
                     .WithValidation(CommandResultValidation.None)
                     .ExecuteFallible();
 
-                Log("Nuget packages resolved");
+                Logger.LogInformation("Nuget packages resolved");
             }
 
-            Log("Building...");
+            Logger.LogInformation("Building...");
             await Cli.Wrap("msbuild")
                 .WithArguments($"\"{ToolPath}\\{SlnName}.sln\" /p:Configuration=Release")
                 .WithValidation(CommandResultValidation.None)
                 .ExecuteFallible();
 
-            Log($"Built.");
+            Logger.LogInformation($"Built.");
         }
         #endregion
 
@@ -138,22 +137,25 @@ namespace Deobfuscator
 
         internal async Task<string> Execute(Deobfuscator deobfuscator, string inputFile)
         {
-            string path = Path.Combine(deobfuscator.WorkingDirectory, inputFile);
-            string fileName = Path.GetFileNameWithoutExtension(inputFile);
-            string outputFile = await ExecuteInternal(deobfuscator, path, fileName);
+            using (deobfuscator.Logger.BeginScope(SlnName))
+            {
+                string path = Path.Combine(deobfuscator.WorkingDirectory, inputFile);
+                string fileName = Path.GetFileNameWithoutExtension(inputFile);
+                string outputFile = await ExecuteInternal(deobfuscator, path, fileName);
 
-            string outputPath = Path.Combine(deobfuscator.WorkingDirectory, outputFile);
-            EnsureOutput(outputPath);
+                string outputPath = Path.Combine(deobfuscator.WorkingDirectory, outputFile);
+                EnsureOutput(deobfuscator, outputPath);
 
-            return outputFile;
+                return outputFile;
+            }
         }
 
         public class OutputNotExistsException : Exception { }
-        protected void EnsureOutput(string outputPath)
+        private static void EnsureOutput(Deobfuscator deobfuscator, string outputPath)
         {
             if (!File.Exists(outputPath))
             {
-                Log("Failed, aborting...");
+                deobfuscator.Logger.LogError("Failed, aborting...");
                 throw new OutputNotExistsException();
             }
         }

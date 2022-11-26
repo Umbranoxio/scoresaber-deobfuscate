@@ -1,4 +1,5 @@
 ﻿using CliWrap;
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -7,7 +8,8 @@ namespace Deobfuscator.Tools
 {
     internal class OsuDecoder : Tool
     {
-        internal OsuDecoder() : base(
+        internal OsuDecoder(ILogger logger) : base(
+            logger: logger,
             path: Path.Combine(Environment.CurrentDirectory, "osu-decoder"),
             buildPath: Path.Combine(Environment.CurrentDirectory, "osu-decoder", "osu!decoder", "bin", "Release", "osu!decoder.exe"),
             slnName: "osu!decoder",
@@ -19,19 +21,20 @@ namespace Deobfuscator.Tools
 
         protected override async Task<string> ExecuteInternal(Deobfuscator deobfuscator, string path, string fileName)
         {
-            Log("Running...");
+            var log = deobfuscator.Logger;
+            log.LogInformation("Running...");
 
             var results = await Cli.Wrap(BuildPath)
                .WithArguments($"-i \"{path}\" -p {deobfuscator.Password}")
                .WithValidation(CommandResultValidation.None)
                .ExecuteFallible();
 
-            if (deobfuscator.Verbose && results?.StandardOutput is not null)
+            if (results?.StandardOutput is not null)
             {
-                Log(results.StandardOutput);
+                log.LogDebug("{stdout}", results.StandardOutput);
             }
 
-            Log("Done.");
+            log.LogInformation("Done.");
             return $"{fileName}-decrypted.dll";
         }
     }

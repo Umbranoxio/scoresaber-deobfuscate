@@ -1,4 +1,5 @@
 ﻿using CliWrap;
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -7,7 +8,8 @@ namespace Deobfuscator.Tools
 {
     internal class Eazfixer : Tool
     {
-        internal Eazfixer() : base(
+        internal Eazfixer(ILogger logger) : base(
+            logger: logger,
             path: Path.Combine(Environment.CurrentDirectory, "EazFixer"),
             buildPath: Path.Combine(Environment.CurrentDirectory, "EazFixer", "EazFixer", "bin", "Release", "net472", "EazFixer.exe"),
             slnName: "EazFixer",
@@ -18,19 +20,20 @@ namespace Deobfuscator.Tools
 
         protected override async Task<string> ExecuteInternal(Deobfuscator deobfuscator, string path, string fileName)
         {
-            Log("Running...");
+            var log = deobfuscator.Logger;
+            log.LogInformation("Running...");
 
             var results = await Cli.Wrap(BuildPath)
                 .WithArguments($"--file \"{path}\"")
                 .WithValidation(CommandResultValidation.None)
                 .ExecuteFallible();
 
-            if (deobfuscator.Verbose && results?.StandardOutput is not null)
+            if (results?.StandardOutput is not null)
             {
-                Log(results.StandardOutput);
+                log.LogDebug("{stdout}", results.StandardOutput);
             }
 
-            Log("Done.");
+            log.LogInformation("Done.");
             return $"{fileName}-eazfix.dll";
         }
     }

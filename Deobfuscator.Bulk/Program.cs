@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,9 +27,20 @@ namespace Deobfuscator.Bulk
             var options = Parser.Default.ParseArguments<Options>(args).Value;
             if (options is null) return;
 
+            using var loggerFactory = LoggerFactory.Create(builder =>
+                builder.AddFilter(null, options.Verbose ? LogLevel.Trace : LogLevel.Information)
+                .AddSimpleConsole(options =>
+                {
+                    options.IncludeScopes = true;
+                    options.TimestampFormat = "HH:mm:ss ";
+                })
+            );
+
+            var log = loggerFactory.CreateLogger("Program");
+
             if (!File.Exists(options.VersionsFile))
             {
-                Console.WriteLine("Versions file does not exist!");
+                log.LogCritical("Versions file does not exist!");
                 Environment.Exit(1);
             }
 
@@ -45,17 +57,19 @@ namespace Deobfuscator.Bulk
                 .Select(line => new VersionInfo(root, line))
                 .ToList();
 
-            await Toolchain.Setup();
+            var toolchain = new Toolchain(loggerFactory);
+            await toolchain.Setup();
+
             foreach (var version in versions)
             {
                 if (!version.Exists)
                 {
-                    Console.WriteLine($"{version} does not exist!");
+                    log.LogWarning("{version} does not exist!", version);
                     continue;
                 }
 
-                var deobfuscator = new Deobfuscator(version.Filepath, options.Password, options.Verbose);
-                await deobfuscator.Deobfuscate();
+                var deobfuscator = new Deobfuscator(loggerFactory, version.Filepath, options.Password);
+                await deobfuscator.Deobfuscate(toolchain);
             }
         }
     }
