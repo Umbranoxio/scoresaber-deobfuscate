@@ -32,7 +32,9 @@ namespace Deobfuscator
             }
 
             InputDir = inputDir;
-            WorkingDirectory = Path.Combine(inputDir, "deobfuscation");
+
+            string fileName = Path.GetFileNameWithoutExtension(inputPath);
+            WorkingDirectory = Path.Combine(inputDir, $"{fileName}-deobfuscation");
         }
 
         public class InputNotExistsException : Exception
