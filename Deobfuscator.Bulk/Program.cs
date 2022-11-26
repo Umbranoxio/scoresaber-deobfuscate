@@ -15,6 +15,9 @@ namespace Deobfuscator.Bulk
             [Option('f', "versions", Required = true, HelpText = "Path to versions tsv file")]
             public string VersionsFile { get; set; } = null!;
 
+            [Option('V', "version", Required = false, HelpText = "Abc")]
+            public string? Version { get; set; }
+
             [Option('p', "password", Required = true, HelpText = "Symbol password")]
             public string Password { get; set; } = null!;
 
@@ -62,6 +65,8 @@ namespace Deobfuscator.Bulk
 
             foreach (var version in versions)
             {
+                if (options.Version is not null && version.Version != options.Version) continue;
+
                 if (!version.Exists)
                 {
                     log.LogWarning("{version} does not exist!", version);
