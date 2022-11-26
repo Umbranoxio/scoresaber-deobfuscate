@@ -2,6 +2,7 @@
 using CliWrap.Buffered;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -32,11 +33,26 @@ namespace Deobfuscator.Tools
             var output = ParseOutput(results.StandardOutput);
             if (output is not null)
             {
-                var (ok, total) = ((int, int))output;
+                var ok = output.MethodProgress;
+                var total = output.MethodTotal;
+
                 if (ok != total)
                 {
                     log.LogError("Devirtualized {ok} / {total} methods", ok, total);
-                    log.LogError("{stdout}", results.StandardOutput);
+
+                    if (output.MissingTypes.Count > 0)
+                    {
+                        foreach (var type in output.MissingTypes)
+                        {
+                            log.LogWarning("Missing type: {type}", type);
+                        }
+                    }
+                    else
+                    {
+                        log.LogWarning("Extra errors detected! Run with --verbose for a full stack trace.");
+                    }
+
+                    log.LogDebug("{stdout}", results.StandardOutput);
                 }
                 else
                 {
@@ -51,23 +67,59 @@ namespace Deobfuscator.Tools
             return $"{fileName}-devirtualized.dll";
         }
 
-        private static readonly Regex DevirtRX = new(@"Devirtualized (?<ok>\d+)/(?<total>\d+) methods", RegexOptions.Compiled);
-        private static (int, int)? ParseOutput(string stdout)
+        internal record Output
         {
+            public int MethodProgress { get; init; }
+            public int MethodTotal { get; init; }
+
+            public HashSet<string> MissingTypes { get; init; } = null!;
+        }
+
+        private static readonly Regex SuccessRX = new(@"Devirtualized (?<ok>\d+)/(?<total>\d+) methods", RegexOptions.Compiled);
+        private static readonly Regex TypeErrorRX = new(@"dnlib\.DotNet\.TypeResolveException: Could not resolve type: (?<type>.+)", RegexOptions.Compiled);
+
+        private static Output? ParseOutput(string stdout)
+        {
+            (int, int)? progress = null;
+            HashSet<string> missingTypes = new();
+
             var lines = stdout.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
             foreach (var line in lines)
             {
-                var match = DevirtRX.Match(line);
-                if (match.Success)
+                var successMatch = SuccessRX.Match(line);
+                if (successMatch.Success)
                 {
-                    string ok = match.Groups["ok"].Value;
-                    string total = match.Groups["total"].Value;
+                    var success = int.Parse(successMatch.Groups["ok"].Value);
+                    var total = int.Parse(successMatch.Groups["total"].Value);
 
-                    return (int.Parse(ok), int.Parse(total));
+                    progress = (success, total);
+                    continue;
+                }
+
+                var typeErrorMatch = TypeErrorRX.Match(line);
+                if (typeErrorMatch.Success)
+                {
+                    string type = line.Replace(@"dnlib.DotNet.TypeResolveException: Could not resolve type: ", "").Trim();
+                    missingTypes.Add(type);
+
+                    continue;
                 }
             }
 
-            return null;
+            Output? output = null;
+            if (progress is not null)
+            {
+                var (methodProgress, methodTotal) = ((int, int))progress;
+                output = new Output
+                {
+                    MethodProgress = methodProgress,
+                    MethodTotal = methodTotal,
+
+                    MissingTypes = missingTypes,
+                };
+            }
+
+            return output;
         }
     }
 }
