@@ -20,8 +20,28 @@ namespace Deobfuscator.Bulk
         internal string SHA1 { get; }
 
         private string Root { get; }
-        internal string Filepath { get => Path.Combine(Root, GameVersion, Filename); }
-        internal bool Exists { get => File.Exists(Filepath); }
+        internal string? Filepath
+        {
+            get
+            {
+                var path = Path.Combine(Root, GameVersion, Filename);
+                if (File.Exists(path)) return path;
+
+                return null;
+            }
+        }
+
+        internal string? GameAssembliesDep { get => DependencyDirectory("Game Assemblies"); }
+        internal string? LibsDep { get => DependencyDirectory("Libs"); }
+        internal string? PluginsDep { get => DependencyDirectory("Plugins"); }
+
+        private string? DependencyDirectory(string name)
+        {
+            var path = Path.Combine(Root, GameVersion, name);
+            if (Directory.Exists(path)) return path;
+
+            return null;
+        }
 
         public VersionInfo(string root, string line)
         {

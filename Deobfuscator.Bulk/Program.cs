@@ -67,13 +67,23 @@ namespace Deobfuscator.Bulk
             {
                 if (options.Version is not null && version.Version != options.Version) continue;
 
-                if (!version.Exists)
+                var path = version.Filepath;
+                if (path is null)
                 {
                     log.LogWarning("{version} does not exist!", version);
                     continue;
                 }
 
-                var deobfuscator = new Deobfuscator(loggerFactory, version.Filepath, options.Password);
+                List<string?> dependencies = new()
+                {
+                    version.GameAssembliesDep,
+                    version.LibsDep,
+                    version.PluginsDep,
+                };
+
+                var deps = dependencies.Where(x => x is not null).Cast<string>().ToList();
+                var deobfuscator = new Deobfuscator(loggerFactory, path, options.Password, deps);
+
                 await deobfuscator.Deobfuscate(toolchain);
             }
         }
