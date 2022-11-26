@@ -12,10 +12,10 @@ namespace Deobfuscator.Bulk
     {
         internal class Options
         {
-            [Option('f', "versions", Required = true, HelpText = "Path to versions tsv file")]
+            [Option('f', "versions", Required = true, HelpText = "Path to versions.tsv file")]
             public string VersionsFile { get; set; } = null!;
 
-            [Option('V', "version", Required = false, HelpText = "Abc")]
+            [Option('V', "version", Required = false, HelpText = "Only run on a single version")]
             public string? Version { get; set; }
 
             [Option('p', "password", Required = true, HelpText = "Symbol password")]
